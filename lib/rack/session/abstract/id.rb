@@ -121,7 +121,7 @@ module Rack
         def load!
           id, session = @by.send(:load_session, @env)
           @env[ENV_SESSION_OPTIONS_KEY][:id] = id
-          replace(stringify_keys(session))
+          merge!(stringify_keys(session))
           @loaded = true
         end
 
