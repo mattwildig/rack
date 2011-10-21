@@ -24,6 +24,11 @@ describe Rack::Session::Cookie do
     Rack::Response.new("Nothing").to_a
   end
 
+  writes_to_session = lambda do |env|
+    env["rack.session"]["baz"] = "qux"
+    Rack::Response.new(env["rack.session"].inspect).to_a
+  end
+
   describe 'Base64' do
     it 'uses base64 to encode' do
       coder = Rack::Session::Cookie::Base64.new
@@ -218,5 +223,12 @@ describe Rack::Session::Cookie do
     app = Rack::Session::Cookie.new(session_id)
     res = Rack::MockRequest.new(app).get("/", 'rack.session' => {:foo => 'bar'})
     res.body.should.match(/foo/)
+  end
+
+  it "doesn't overwrite data when passing in a hash with session data from middleware in front" do
+    app = Rack::Session::Cookie.new(writes_to_session)
+    res = Rack::MockRequest.new(app).get("/", 'rack.session' => {:foo => 'bar'})
+    res.body.should.match(/foo/)
+    res.body.should.match(/baz/)
   end
 end
